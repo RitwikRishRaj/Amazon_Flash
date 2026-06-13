@@ -1,0 +1,28 @@
+{
+  "extends": "./node_modules/expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "jsx": "react-native",
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@screens/*":    ["src/screens/*"],
+      "@components/*": ["src/components/*"],
+      "@hooks/*":      ["src/hooks/*"],
+      "@store/*":      ["src/store/*"],
+      "@services/*":   ["src/services/*"],
+      "@navigation/*": ["src/navigation/*"],
+      "@constants/*":  ["src/constants/*"],
+      "@app-types/*":  ["src/types/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

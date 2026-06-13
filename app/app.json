@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "FlashCart",
+    "slug": "flashcart",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0D0D0D"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.amazon.flashcart",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FlashCart uses your camera to scan and identify products for instant reordering.",
+        "NSMicrophoneUsageDescription": "FlashCart uses your microphone so you can speak your order with FlashAsk."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0D0D0D"
+      },
+      "package": "com.amazon.flashcart",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-notifications",
+      "expo-splash-screen"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "flashcart-project-id"
+      }
+    }
+  }
+}
