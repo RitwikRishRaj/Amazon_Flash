@@ -3,6 +3,7 @@
     "name": "FlashCart",
     "slug": "flashcart",
     "version": "1.0.0",
+    "scheme": "flashcart",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -38,7 +39,8 @@
     "plugins": [
       "expo-camera",
       "expo-notifications",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

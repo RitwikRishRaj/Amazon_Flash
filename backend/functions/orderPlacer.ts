@@ -1,6 +1,7 @@
 import type { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 import { getItem, putItem, updateItem, Tables } from '../shared/dynamo';
+import { getUserId } from '../shared/context';
 import type { ApiResponse, CartItem, Order, User } from '../shared/types';
 
 // ─── Order Placer ─────────────────────────────────────────────────────────────
@@ -16,8 +17,9 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
     const { items } = JSON.parse(event.body) as { items: CartItem[] };
     if (!items?.length) return respond(400, { error: 'Cart is empty' });
 
-    const userId = event.requestContext.authorizer?.['sub'] as string | undefined ?? 'anonymous';
-    const user   = await getItem<User>(Tables.users, { id: userId });
+    const userId = getUserId(event);
+    if (!userId) return respond(401, { error: 'Unauthorized' });
+    const user = await getItem<User>(Tables.users, { id: userId });
     if (!user) return respond(404, { error: 'User not found' });
 
     // Validate all items are in stock
@@ -26,20 +28,20 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
       return respond(409, { error: `Item out of stock: ${oosItem.product.name}` });
     }
 
-    const orderId    = randomUUID();
+    const orderId = randomUUID();
     const totalPrice = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
-    const etaMin     = Math.max(...items.map((i) => i.product.estimatedDeliveryMin));
+    const etaMin = Math.max(...items.map((i) => i.product.estimatedDeliveryMin));
 
     const order: Order = {
-      id:                 orderId,
+      id: orderId,
       userId,
       items,
       totalPrice,
-      currency:           items[0]?.product.currency ?? 'USD',
-      address:            user.defaultAddress,
+      currency: items[0]?.product.currency ?? 'USD',
+      address: user.defaultAddress,
       paymentMethodLast4: user.defaultPaymentLast4,
-      status:             'confirmed',
-      placedAt:           new Date().toISOString(),
+      status: 'confirmed',
+      placedAt: new Date().toISOString(),
       etaMin,
     };
 
@@ -48,9 +50,9 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
 
     // Update user's order history
     await updateItem({
-      TableName:                 Tables.users,
-      Key:                       { id: userId },
-      UpdateExpression:          'SET orderHistory = list_append(if_not_exists(orderHistory, :empty), :orderId)',
+      TableName: Tables.users,
+      Key: { id: userId },
+      UpdateExpression: 'SET orderHistory = list_append(if_not_exists(orderHistory, :empty), :orderId)',
       ExpressionAttributeValues: { ':orderId': [orderId], ':empty': [] },
     });
 

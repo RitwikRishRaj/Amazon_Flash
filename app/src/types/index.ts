@@ -21,6 +21,7 @@ export interface CartItem {
 
 export interface Order {
   id: string;
+  userId: string;
   items: CartItem[];
   totalPrice: number;
   currency: string;
@@ -54,6 +55,7 @@ export interface User {
   email: string;
   defaultAddress: Address;
   defaultPaymentLast4: string;
+  orderHistory: string[];      // order IDs
   urgentModeEnabled: boolean;
 }
 
@@ -101,13 +103,14 @@ export interface SubstitutionResult {
 // ─── Navigation Types ─────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
-  Splash:      undefined;
-  Home:        undefined;
-  FlashAsk:    undefined;
+  Splash: undefined;
+  Onboarding: undefined;
+  Home: undefined;
+  FlashAsk: undefined;
   SnapReorder: undefined;
-  Checkout:    { items: CartItem[] };
-  Confirmed:   { order: Order };
-  SwapAI:      { original: Product; substitute: Product; similarityScore: number };
+  Checkout: { items: CartItem[] };
+  Confirmed: { order: Order };
+  SwapAI: { original: Product; substitute: Product; similarityScore: number };
 };
 
 // ─── UI State Types ───────────────────────────────────────────────────────────

@@ -5,8 +5,9 @@ import {
   type Label,
 } from '@aws-sdk/client-rekognition';
 import { invokeClaudeJSON } from '../shared/bedrock';
-import { Prompts }          from '../shared/prompts';
-import { scanItems, Tables } from '../shared/dynamo';
+import { Prompts } from '../shared/prompts';
+import { getItem, Tables } from '../shared/dynamo';
+import { getUserId } from '../shared/context';
 import type { ApiResponse, SnapRequest, SnapResult, Product } from '../shared/types';
 
 const rekognition = new RekognitionClient({ region: process.env['AWS_REGION'] ?? 'us-east-1' });
@@ -24,11 +25,13 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
     const { image } = JSON.parse(event.body) as SnapRequest;
     if (!image) return respond(400, { error: 'Missing image field' });
 
+    if (!getUserId(event)) return respond(401, { error: 'Unauthorized' });
+
     const imageBuffer = Buffer.from(image, 'base64');
 
     // Step 1: Rekognition label detection
     const rekResult = await rekognition.send(new DetectLabelsCommand({
-      Image:   { Bytes: imageBuffer },
+      Image: { Bytes: imageBuffer },
       MaxLabels: 20,
       MinConfidence: 60,
     }));
@@ -42,21 +45,19 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
       return respond(200, { data: result, requestId });
     }
 
-    // Step 2: Bedrock label → product query
-    const productData = await invokeClaudeJSON<{ productQuery: string; confidence: number }>(
+    // Step 2: Bedrock label → product matching
+    const productData = await invokeClaudeJSON<{ productId: string | null; confidence: number }>(
       Prompts.labelsToProduct(rawLabels),
     );
 
     // Step 3: DynamoDB product lookup
-    const products = await scanItems<Product>({
-      TableName:        Tables.products,
-      FilterExpression: 'contains(#nm, :q) AND inStock = :true',
-      ExpressionAttributeNames:  { '#nm': 'name' },
-      ExpressionAttributeValues: { ':q': productData.productQuery, ':true': true },
-      Limit: 1,
-    });
-
-    const product = products[0] ? { ...products[0], confidence: productData.confidence } : null;
+    let product: Product | null = null;
+    if (productData.productId) {
+      const rawProduct = await getItem<Product>(Tables.products, { id: productData.productId });
+      if (rawProduct) {
+        product = { ...rawProduct, confidence: productData.confidence };
+      }
+    }
 
     const result: SnapResult = {
       product,

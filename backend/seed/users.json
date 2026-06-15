@@ -1,31 +1,36 @@
 [
   {
     "id": "user-001",
-    "name": "Alex Johnson",
-    "email": "alex.johnson@example.com",
+    "name": "Aarav Sharma",
+    "email": "aarav.sharma@example.in",
     "defaultAddress": {
-      "line1":   "123 Main St",
-      "line2":   "Apt 4B",
-      "city":    "Seattle",
-      "state":   "WA",
-      "zip":     "98101",
-      "country": "US"
+      "line1": "12, 4th Block, Koramangala",
+      "line2": "Near Forum Mall",
+      "city": "Bengaluru",
+      "state": "KA",
+      "zip": "560034",
+      "country": "India"
     },
     "defaultPaymentLast4": "4242",
-    "orderHistory": []
+    "orderHistory": [],
+    "urgentModeEnabled": false
   },
   {
     "id": "user-002",
-    "name": "Priya Sharma",
-    "email": "priya.sharma@example.com",
+    "name": "Priya Nair",
+    "email": "priya.nair@example.in",
     "defaultAddress": {
-      "line1":   "456 Oak Ave",
-      "city":    "San Francisco",
-      "state":   "CA",
-      "zip":     "94105",
-      "country": "US"
+      "line1": "201, Bandra West",
+      "city": "Mumbai",
+      "state": "MH",
+      "zip": "400050",
+      "country": "India"
     },
     "defaultPaymentLast4": "1234",
-    "orderHistory": ["order-legacy-001", "order-legacy-002"]
+    "orderHistory": [
+      "order-legacy-001",
+      "order-legacy-002"
+    ],
+    "urgentModeEnabled": false
   }
 ]

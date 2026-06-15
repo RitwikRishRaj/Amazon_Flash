@@ -25,15 +25,38 @@ flashcart/
 ## Getting Started
 
 ```bash
-# Install dependencies
-yarn install
+# Install dependencies (app + backend)
+npm run install:all
 
 # Start the app (Expo)
-yarn app
+npm run app
 
 # Start backend (serverless-offline)
-yarn backend
+npm run backend
 ```
+
+### Environment
+
+App (`app/.env`):
+
+```
+EXPO_PUBLIC_API_BASE_URL=<your API Gateway base URL>
+EXPO_PUBLIC_COGNITO_DOMAIN=<your Cognito hosted-UI domain>
+EXPO_PUBLIC_COGNITO_CLIENT_ID=<your Cognito app client id>
+```
+
+Backend (`backend/.env`, see `backend/.env.example`):
+
+```
+COGNITO_USER_POOL_ARN=<arn of the Cognito user pool>
+COGNITO_CLIENT_ID=<app client id>
+LEX_BOT_ID=<lex v2 bot id>
+LEX_BOT_ALIAS_ID=<lex v2 bot alias id>
+```
+
+All protected endpoints sit behind a Cognito User Pools API Gateway authorizer.
+The mobile client sends the Cognito `IdToken` as `Authorization: Bearer <token>`;
+handlers read the authenticated user from the verified `sub` claim.
 
 ## Design System
 

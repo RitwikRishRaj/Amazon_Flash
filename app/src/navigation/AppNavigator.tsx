@@ -2,34 +2,38 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
 import { StyleSheet } from 'react-native';
 
 import { Colors } from '@constants/colors';
 import type { RootStackParamList } from '@app-types/index';
 
-import SplashScreen      from '@screens/SplashScreen';
-import HomeScreen        from '@screens/HomeScreen';
-import FlashAskScreen    from '@screens/FlashAskScreen';
+import SplashScreen from '@screens/SplashScreen';
+import OnboardingScreen from '@screens/OnboardingScreen';
+import HomeScreen from '@screens/HomeScreen';
+import FlashAskScreen from '@screens/FlashAskScreen';
 import SnapReorderScreen from '@screens/SnapReorderScreen';
-import CheckoutScreen    from '@screens/CheckoutScreen';
-import ConfirmedScreen   from '@screens/ConfirmedScreen';
-import SwapAIScreen      from '@screens/SwapAIScreen';
+import CheckoutScreen from '@screens/CheckoutScreen';
+import ConfirmedScreen from '@screens/ConfirmedScreen';
+import SwapAIScreen from '@screens/SwapAIScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={styles.root}>
+      <StatusBar style="light" />
       <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Splash"
           screenOptions={{
-            headerShown:  false,
+            headerShown: false,
             contentStyle: { backgroundColor: Colors.bgBase },
           }}
         >
-          <Stack.Screen name="Splash"      component={SplashScreen} />
-          <Stack.Screen name="Home"        component={HomeScreen} />
+          <Stack.Screen name="Splash" component={SplashScreen} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen
             name="FlashAsk"
             component={FlashAskScreen}

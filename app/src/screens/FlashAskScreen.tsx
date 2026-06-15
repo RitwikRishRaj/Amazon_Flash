@@ -12,6 +12,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Colors } from '@constants/colors';
+import { formatPrice } from '@constants/format';
 import type { RootStackParamList, Product } from '@app-types/index';
 import { useVoice } from '@hooks/useVoice';
 import { placeOrder } from '@services/api';
@@ -20,16 +21,16 @@ import { useSessionStore } from '@store/sessionStore';
 type Nav = NativeStackNavigationProp<RootStackParamList, 'FlashAsk'>;
 
 const CROCIN_PRODUCT: Product = {
-  id: 'prod-crocin',
-  asin: 'B00F3JOF8A',
-  name: 'Crocin Advance',
-  brand: '500mg • 15 Tablets',
-  imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD4XCkuUuNAIfkOvWEqw-FQbfSeb9JpbOJEgD4FJnrSg77yO2Yoo8I4O2Oj-3mN_qWUGfKdDRMk8fuB1SH5yAwhm-36Ws7tdpTZ6GgxyJgUMDHt6ZEqw1Q6KtSWYsfiODv07eaKlqSyn85YYXpuGx4U45aSsLcW1z9BuPG3QbGGCNR0EY51XDliAF71icItBFSSwWc__9MO6Z6tkCfPPofh38QEp1GYqoUr1YTXX7p-bQRFaPEHaJOtBp8lDzaP95bJ4Owap9lLG0o',
-  price: 4.50,
-  currency: 'USD',
+  id: 'prod-005',
+  asin: 'B001155YGE',
+  name: 'Crocin Advance 500mg, 20 Tablets',
+  brand: 'Crocin',
+  imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/81xHhXjP59L._SL1500_.jpg',
+  price: 35,
+  currency: 'INR',
   inStock: true,
   estimatedDeliveryMin: 12,
-  category: 'Medicine',
+  category: 'health',
 };
 
 export default function FlashAskScreen(): React.JSX.Element {
@@ -257,15 +258,16 @@ export default function FlashAskScreen(): React.JSX.Element {
       // Mocked fallback order if API dev server is offline
       const mockOrder = {
         id: `ORD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        userId: user?.id ?? 'anonymous',
         items: [{ product: matchedProduct, quantity: 1 }],
         totalPrice: matchedProduct.price,
         currency: matchedProduct.currency,
         address: user?.defaultAddress ?? {
-          line1: '123 Amazon Way',
-          city: 'Seattle',
-          state: 'WA',
-          zip: '98101',
-          country: 'USA',
+          line1: '12, 4th Block, Koramangala',
+          city: 'Bengaluru',
+          state: 'KA',
+          zip: '560034',
+          country: 'India',
         },
         paymentMethodLast4: user?.defaultPaymentLast4 ?? '4321',
         status: 'confirmed' as const,
@@ -293,37 +295,37 @@ export default function FlashAskScreen(): React.JSX.Element {
         <View style={styles.micContainer}>
           {isRecording && (
             <>
-              <Animated.View 
+              <Animated.View
                 style={[
-                  styles.pulsingRing, 
+                  styles.pulsingRing,
                   { opacity: ring1Opacity, transform: [{ scale: ring1Scale }] }
-                ]} 
+                ]}
               />
-              <Animated.View 
+              <Animated.View
                 style={[
-                  styles.pulsingRing, 
+                  styles.pulsingRing,
                   { opacity: ring2Opacity, transform: [{ scale: ring2Scale }] }
-                ]} 
+                ]}
               />
-              <Animated.View 
+              <Animated.View
                 style={[
-                  styles.pulsingRing, 
+                  styles.pulsingRing,
                   { opacity: ring3Opacity, transform: [{ scale: ring3Scale }] }
-                ]} 
+                ]}
               />
             </>
           )}
 
           {/* Mic Button */}
-          <TouchableOpacity 
-            style={[styles.micBtn, matchedProduct && styles.micBtnInactive]} 
+          <TouchableOpacity
+            style={[styles.micBtn, matchedProduct && styles.micBtnInactive]}
             onPress={handleMicPress}
             activeOpacity={0.85}
           >
-            <MaterialIcons 
-              name="mic" 
-              size={40} 
-              color={Colors.accentPrimary} 
+            <MaterialIcons
+              name="mic"
+              size={40}
+              color={Colors.accentPrimary}
               style={styles.micIcon}
             />
           </TouchableOpacity>
@@ -331,13 +333,13 @@ export default function FlashAskScreen(): React.JSX.Element {
 
         {/* Listening / Match Status */}
         <Text style={styles.statusText}>
-          {isRecording 
-            ? 'Listening...' 
+          {isRecording
+            ? 'Listening...'
             : state.status === 'loading'
-            ? 'Processing...'
-            : matchedProduct 
-            ? 'Found Match' 
-            : 'Tap mic & speak'}
+              ? 'Processing...'
+              : matchedProduct
+                ? 'Found Match'
+                : 'Tap mic & speak'}
         </Text>
 
         {/* Dynamic Sound Wave */}
@@ -368,12 +370,12 @@ export default function FlashAskScreen(): React.JSX.Element {
             <View style={styles.productInfo}>
               <Text style={styles.productName} numberOfLines={1}>{matchedProduct.name}</Text>
               <Text style={styles.productBrand} numberOfLines={1}>{matchedProduct.brand}</Text>
-              
+
               <View style={styles.productPriceRow}>
                 <Text style={styles.productPrice}>
-                  {matchedProduct.currency === 'INR' ? '₹' : '$'}{matchedProduct.price.toFixed(2)}
+                  {formatPrice(matchedProduct.price, matchedProduct.currency)}
                 </Text>
-                
+
                 {/* Delivery pill */}
                 <View style={styles.deliveryPill}>
                   <MaterialIcons name="bolt" size={14} color={Colors.success} />
@@ -386,8 +388,8 @@ export default function FlashAskScreen(): React.JSX.Element {
           </View>
 
           {/* Swipe-to-Confirm Slider */}
-          <View 
-            style={styles.swipeTrack} 
+          <View
+            style={styles.swipeTrack}
             onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
           >
             <View style={styles.swipeTextWrap}>
@@ -395,10 +397,10 @@ export default function FlashAskScreen(): React.JSX.Element {
             </View>
 
             {/* Slider thumb */}
-            <Animated.View 
+            <Animated.View
               {...panResponder.panHandlers}
               style={[
-                styles.swipeThumb, 
+                styles.swipeThumb,
                 { transform: [{ translateX: pan }] }
               ]}
             >
@@ -436,7 +438,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: Colors.textMuted,
-    fontFamily: 'Inter',
   },
   headerSpacer: {
     width: 40,
@@ -461,7 +462,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 153, 0, 0.4)',
+    borderColor: Colors.accentAlpha40,
   },
   micBtn: {
     width: 120,
@@ -484,19 +485,18 @@ const styles = StyleSheet.create({
     borderColor: Colors.bgBorder,
   },
   micIcon: {
-    textShadowColor: 'rgba(255, 153, 0, 0.8)',
+    textShadowColor: Colors.accentAlpha80,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
   },
   statusText: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#FFFFFF',
-    fontFamily: 'Inter',
+    color: Colors.textPrimary,
     letterSpacing: 0.5,
     marginBottom: 32,
     // Text shadow matching the HTML design
-    textShadowColor: 'rgba(255, 153, 0, 0.5)',
+    textShadowColor: Colors.accentAlpha50,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
     paddingHorizontal: 24,
-    shadowColor: '#000000',
+    shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: -10 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
@@ -558,14 +558,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
   },
   productCard: {
     flexDirection: 'row',
     backgroundColor: Colors.bgElevated,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 153, 0, 0.2)',
+    borderColor: Colors.accentAlpha20,
     padding: 16,
     alignItems: 'center',
     gap: 16,
@@ -584,14 +583,12 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFFFFF',
-    fontFamily: 'Inter',
+    color: Colors.textPrimary,
     marginBottom: 2,
   },
   productBrand: {
     fontSize: 13,
     color: Colors.textMuted,
-    fontFamily: 'Inter',
     marginBottom: 8,
   },
   productPriceRow: {
@@ -603,12 +600,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: Colors.accentPrimary,
-    fontFamily: 'Inter',
   },
   deliveryPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(29, 185, 84, 0.15)',
+    backgroundColor: Colors.successAlpha15,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 9999,
@@ -618,13 +614,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: Colors.success,
-    fontFamily: 'Inter',
   },
   swipeTrack: {
     width: '100%',
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(204, 122, 0, 0.25)',
+    backgroundColor: Colors.accentDimAlpha25,
     padding: TRACK_PADDING,
     justifyContent: 'center',
     position: 'relative',
@@ -641,7 +636,7 @@ const styles = StyleSheet.create({
   swipeText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Colors.textPrimary,
     opacity: 0.8,
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -650,11 +645,11 @@ const styles = StyleSheet.create({
     width: THUMB_WIDTH,
     height: THUMB_WIDTH,
     borderRadius: THUMB_WIDTH / 2,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.textPrimary,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    shadowColor: '#000000',
+    shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

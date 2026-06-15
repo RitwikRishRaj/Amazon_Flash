@@ -1,5 +1,6 @@
 service: flashcart-backend
 frameworkVersion: '3'
+useDotenv: true
 
 plugins:
   - serverless-plugin-typescript
@@ -15,10 +16,13 @@ provider:
     PRODUCTS_TABLE:     flashcart-products-${self:provider.stage}
     USERS_TABLE:        flashcart-users-${self:provider.stage}
     ORDERS_TABLE:       flashcart-orders-${self:provider.stage}
-    BEDROCK_MODEL_ID:   anthropic.claude-3-sonnet-20240229-v1:0
+    BEDROCK_MODEL_ID:   ${env:BEDROCK_MODEL_ID, 'anthropic.claude-3-5-sonnet-20240620-v1:0'}
     LEX_BOT_ID:         ${env:LEX_BOT_ID, 'PLACEHOLDER'}
     LEX_BOT_ALIAS_ID:   ${env:LEX_BOT_ALIAS_ID, 'PLACEHOLDER'}
     LEX_LOCALE_ID:      en_US
+    COGNITO_CLIENT_ID:    ${env:COGNITO_CLIENT_ID}
+    COGNITO_REGION:       ${self:provider.region}
+    COGNITO_USER_POOL_ARN: ${env:COGNITO_USER_POOL_ARN}
   iam:
     role:
       statements:
@@ -42,55 +46,81 @@ provider:
           Resource: '*'
         - Effect: Allow
           Action:
-            - lex:RecognizeSpeech
+            - lex:RecognizeUtterance
             - lex:RecognizeText
           Resource: '*'
 
 functions:
+  signInWithPhone:
+    handler: functions/auth.signInWithPhone
+    events:
+      - http: { path: /auth/signin/phone, method: post, cors: true }
+
+  verifyPhoneOtp:
+    handler: functions/auth.verifyPhoneOtp
+    events:
+      - http: { path: /auth/verify/otp, method: post, cors: true }
+
   intentRouter:
     handler: functions/intentRouter.handler
     events:
-      - http: { path: /intent, method: post, cors: true }
-
+      - http:
+          path: /intent
+          method: post
+          cors: true
   voiceProcessor:
     handler: functions/voiceProcessor.handler
     timeout: 30
     events:
-      - http: { path: /voice/process, method: post, cors: true }
-
+      - http:
+          path: /voice/process
+          method: post
+          cors: true
   snapProcessor:
     handler: functions/snapProcessor.handler
     timeout: 30
     events:
-      - http: { path: /snap/process, method: post, cors: true }
-
+      - http:
+          path: /snap/process
+          method: post
+          cors: true
   predictCartEngine:
     handler: functions/predictCartEngine.handler
     timeout: 30
     events:
-      - http: { path: /predict/cart, method: get, cors: true }
-
+      - http:
+          path: /predict/cart
+          method: get
+          cors: true
   contextClassifier:
     handler: functions/contextClassifier.handler
     events:
-      - http: { path: /context/classify, method: post, cors: true }
-
+      - http:
+          path: /context/classify
+          method: post
+          cors: true
   checkoutAssembler:
     handler: functions/checkoutAssembler.handler
     events:
-      - http: { path: /checkout/assemble, method: post, cors: true }
-
+      - http:
+          path: /checkout/assemble
+          method: post
+          cors: true
   substitutionEngine:
     handler: functions/substitutionEngine.handler
     events:
-      - http: { path: /products/{asin}/substitute, method: get, cors: true }
-
+      - http:
+          path: "/products/{asin}/substitute"
+          method: get
+          cors: true
   orderPlacer:
     handler: functions/orderPlacer.handler
     timeout: 15
     events:
-      - http: { path: /orders, method: post, cors: true }
-
+      - http:
+          path: /orders
+          method: post
+          cors: true
 resources:
   Resources:
     ProductsTable:

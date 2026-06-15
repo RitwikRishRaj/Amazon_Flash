@@ -1,0 +1,36 @@
+[
+    {
+        "id": "user-001",
+        "name": "Aarav Sharma",
+        "email": "aarav.sharma@example.in",
+        "defaultAddress": {
+            "line1": "12, 4th Block, Koramangala",
+            "line2": "Near Forum Mall",
+            "city": "Bengaluru",
+            "state": "KA",
+            "zip": "560034",
+            "country": "India"
+        },
+        "defaultPaymentLast4": "4242",
+        "orderHistory": [],
+        "urgentModeEnabled": false
+    },
+    {
+        "id": "user-002",
+        "name": "Priya Nair",
+        "email": "priya.nair@example.in",
+        "defaultAddress": {
+            "line1": "201, Bandra West",
+            "city": "Mumbai",
+            "state": "MH",
+            "zip": "400050",
+            "country": "India"
+        },
+        "defaultPaymentLast4": "1234",
+        "orderHistory": [
+            "order-legacy-001",
+            "order-legacy-002"
+        ],
+        "urgentModeEnabled": false
+    }
+]

@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
 import { Colors } from '@constants/colors';
+import { formatPrice } from '@constants/format';
 import type { Product } from '@app-types/index';
 import UrgencyBadge from './UrgencyBadge';
-import DeliveryETA  from './DeliveryETA';
+import DeliveryETA from './DeliveryETA';
 
 interface Props {
-  product:  Product;
+  product: Product;
   compact?: boolean;
   onPress?: () => void;
 }
@@ -27,7 +28,7 @@ export default function ProductResultCard({ product, compact = false, onPress }:
           {!product.inStock && <UrgencyBadge label="OOS" />}
         </View>
         <Text style={styles.brand}>{product.brand}</Text>
-        <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+        <Text style={styles.price}>{formatPrice(product.price, product.currency)}</Text>
         {!compact && <DeliveryETA etaMin={product.estimatedDeliveryMin} />}
       </View>
     </Pressable>
@@ -35,14 +36,14 @@ export default function ProductResultCard({ product, compact = false, onPress }:
 }
 
 const styles = StyleSheet.create({
-  card:         { flexDirection: 'row', backgroundColor: Colors.bgSurface, borderRadius: 14, padding: 12, gap: 12 },
-  pressed:      { opacity: 0.8 },
-  image:        { width: 80, height: 80, borderRadius: 10, backgroundColor: Colors.bgElevated },
+  card: { flexDirection: 'row', backgroundColor: Colors.bgSurface, borderRadius: 14, padding: 12, gap: 12 },
+  pressed: { opacity: 0.8 },
+  image: { width: 80, height: 80, borderRadius: 10, backgroundColor: Colors.bgElevated },
   imageCompact: { width: 52, height: 52, borderRadius: 8, backgroundColor: Colors.bgElevated },
-  content:      { flex: 1, justifyContent: 'center', gap: 3 },
-  topRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  name:         { fontSize: 15, fontWeight: '600', color: Colors.textPrimary, flex: 1, marginRight: 4 },
-  nameCompact:  { fontSize: 13 },
-  brand:        { fontSize: 12, color: Colors.textMuted },
-  price:        { fontSize: 16, fontWeight: '700', color: Colors.accentPrimary },
+  content: { flex: 1, justifyContent: 'center', gap: 3 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  name: { fontSize: 15, fontWeight: '600', color: Colors.textPrimary, flex: 1, marginRight: 4 },
+  nameCompact: { fontSize: 13 },
+  brand: { fontSize: 12, color: Colors.textMuted },
+  price: { fontSize: 16, fontWeight: '700', color: Colors.accentPrimary },
 });

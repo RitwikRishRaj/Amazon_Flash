@@ -1,7 +1,15 @@
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 // ─── Notification Service ─────────────────────────────────────────────────────
+
+function getProjectId(): string | undefined {
+  return (
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    (Constants as { easConfig?: { projectId?: string } }).easConfig?.projectId
+  );
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -34,9 +42,13 @@ export async function getExpoPushToken(): Promise<string | null> {
     });
   }
 
-  const token = await Notifications.getExpoPushTokenAsync({
-    projectId: 'flashcart-project-id',
-  });
+  const projectId = getProjectId();
+  if (!projectId) {
+    console.warn('[notifications] No EAS projectId configured; cannot fetch push token.');
+    return null;
+  }
+
+  const token = await Notifications.getExpoPushTokenAsync({ projectId });
   return token.data;
 }
 

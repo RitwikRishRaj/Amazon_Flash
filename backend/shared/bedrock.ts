@@ -5,10 +5,10 @@ import {
 } from '@aws-sdk/client-bedrock-runtime';
 
 const client = new BedrockRuntimeClient({ region: process.env['AWS_REGION'] ?? 'us-east-1' });
-const MODEL_ID = process.env['BEDROCK_MODEL_ID'] ?? 'anthropic.claude-3-sonnet-20240229-v1:0';
+const MODEL_ID = process.env['BEDROCK_MODEL_ID'] ?? 'anthropic.claude-3-5-sonnet-20240620-v1:0';
 
 export interface BedrockMessage {
-  role:    'user' | 'assistant';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -19,15 +19,15 @@ export interface BedrockMessage {
 export async function invokeClaude(prompt: string): Promise<string> {
   const body = JSON.stringify({
     anthropic_version: 'bedrock-2023-05-31',
-    max_tokens:        1024,
+    max_tokens: 1024,
     messages: [{ role: 'user', content: prompt }],
   });
 
   const command = new InvokeModelCommand({
-    modelId:     MODEL_ID,
+    modelId: MODEL_ID,
     contentType: 'application/json',
-    accept:      'application/json',
-    body:        Buffer.from(body),
+    accept: 'application/json',
+    body: Buffer.from(body),
   });
 
   const response: InvokeModelCommandOutput = await client.send(command);

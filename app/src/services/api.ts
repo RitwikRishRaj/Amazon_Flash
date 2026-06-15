@@ -8,6 +8,7 @@ import type {
   SubstitutionResult,
   CartItem,
   Order,
+  User,
 } from '@app-types/index';
 
 // ─── Axios Instance ───────────────────────────────────────────────────────────
@@ -75,5 +76,25 @@ export async function fetchSubstitution(
 
 export async function placeOrder(items: CartItem[]): Promise<Order> {
   const res = await http.post<ApiResponse<Order>>('/orders', { items });
+  return res.data.data;
+}
+
+export async function signInWithPhone(phoneNumber: string): Promise<string> {
+  const res = await http.post<ApiResponse<{ sessionId: string }>>('/auth/signin/phone', {
+    phoneNumber,
+  });
+  return res.data.data.sessionId;
+}
+
+export async function verifyPhoneOtp(
+  phoneNumber: string,
+  sessionId: string,
+  code: string,
+): Promise<{ user: User; token: string }> {
+  const res = await http.post<ApiResponse<{ user: User; token: string }>>('/auth/verify/otp', {
+    phoneNumber,
+    sessionId,
+    code,
+  });
   return res.data.data;
 }

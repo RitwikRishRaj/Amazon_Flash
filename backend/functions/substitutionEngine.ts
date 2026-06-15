@@ -1,5 +1,5 @@
 import type { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { getItem, scanItems, Tables } from '../shared/dynamo';
+import { scanItems, Tables } from '../shared/dynamo';
 import { invokeClaudeJSON }            from '../shared/bedrock';
 import { Prompts }                     from '../shared/prompts';
 import type { ApiResponse, SubstitutionResult, Product } from '../shared/types';
@@ -15,8 +15,14 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
     const asin = event.pathParameters?.['asin'];
     if (!asin) return respond(400, { error: 'Missing ASIN' });
 
-    // Fetch original product
-    const original = await getItem<Product>(Tables.products, { asin });
+    // Fetch original product using scanItems by ASIN filter since asin is not the partition key
+    const products = await scanItems<Product>({
+      TableName:        Tables.products,
+      FilterExpression: 'asin = :asin',
+      ExpressionAttributeValues: { ':asin': asin },
+      Limit: 1,
+    });
+    const original = products[0] ?? null;
     if (!original) return respond(404, { error: 'Product not found' });
 
     // Find alternatives in the same category that are in stock

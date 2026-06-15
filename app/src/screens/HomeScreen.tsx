@@ -1,20 +1,62 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Pressable
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, Image, Pressable, Alert, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
+import { fetchSubstitution } from '@services/api';
 import { Colors } from '@constants/colors';
+import { formatPrice } from '@constants/format';
 import type { RootStackParamList, Product } from '@app-types/index';
 import { useContextMode } from '@hooks/useContextMode';
-import { usePredictCart }  from '@hooks/usePredictCart';
-import { useCartStore }    from '@store/cartStore';
+import { usePredictCart } from '@hooks/usePredictCart';
+import { useCartStore } from '@store/cartStore';
 import { useSessionStore } from '@store/sessionStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+const RECENT_AMAZON_PRODUCTS: Record<string, Product> = {
+  juice: {
+    id: "prod-001",
+    asin: "B0014D8D5A",
+    name: "Tropicana Orange Juice, 52 fl oz",
+    brand: "Tropicana",
+    imageUrl: "https://images-na.ssl-images-amazon.com/images/I/71uF6b+KqyL._SL1500_.jpg",
+    price: 199,
+    currency: "INR",
+    inStock: true,
+    estimatedDeliveryMin: 12,
+    category: "beverages"
+  },
+  redbull: {
+    id: "prod-006",
+    asin: "B004F34EY6",
+    name: "Red Bull Energy Drink, 12-pack (8.4 fl oz)",
+    brand: "Red Bull",
+    imageUrl: "https://images-na.ssl-images-amazon.com/images/I/81e592hR2qL._SL1500_.jpg",
+    price: 1499,
+    currency: "INR",
+    inStock: true,
+    estimatedDeliveryMin: 10,
+    category: "beverages"
+  },
+  advil: {
+    id: "prod-004",
+    asin: "B000052WY6",
+    name: "Advil Ibuprofen 200mg, 100 Tablets",
+    brand: "Advil",
+    imageUrl: "https://images-na.ssl-images-amazon.com/images/I/81+21zK5s9L._SL1500_.jpg",
+    price: 250,
+    currency: "INR",
+    inStock: false,
+    estimatedDeliveryMin: 15,
+    category: "health"
+  }
+};
 
 export default function HomeScreen(): React.JSX.Element {
   const navigation = useNavigation<Nav>();
@@ -22,6 +64,8 @@ export default function HomeScreen(): React.JSX.Element {
   const { state } = usePredictCart();
   const { items, addItem } = useCartStore();
   const { user } = useSessionStore();
+
+  const [loadingSubstitution, setLoadingSubstitution] = useState(false);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -34,30 +78,26 @@ export default function HomeScreen(): React.JSX.Element {
     navigation.navigate('Checkout', { items });
   };
 
-  const addRecentItem = (name: string, price: number, brand: string) => {
-    // Check if we already have it in predictions
-    const found = state.data?.items.find(
-      (item) =>
-        item.name.toLowerCase().includes(name.toLowerCase()) ||
-        name.toLowerCase().includes(item.name.toLowerCase())
-    );
-    if (found) {
-      addItem(found);
+  const handleAddToCart = async (product: Product) => {
+    if (product.inStock) {
+      addItem(product);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
-      // Construct fallback product representation
-      const dummyProduct: Product = {
-        id: `recent-${name.toLowerCase().replace(/\s+/g, '-')}`,
-        asin: `ASIN-${name.substring(0, 3).toUpperCase()}`,
-        name,
-        brand,
-        imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBw2-WN88q1GxH7nZVjGD9dHMcnB5VFECh6HuXYGNamuYYALj0F2n1v0sPYBk0p7Bhg9T9t5rusLgBCzmSGDtHQucMnxtNhk6wTaiQe9Mot_4uBkj2q5VwpZlRUsQKB5IbSbNTvVAdrmTJXQfOQ23ZABUn8ccTXoQHVFIHFTBXK-gQKRAMPFt9PsXgLtk2dzLjUKxjIvwpo4qX4Ypscg_g0ISXfudS7q_P5z62kRJ3Aaj7dEr3VPKrcgON-dRTqmQQUtYxB9h9X8l8',
-        price,
-        currency: 'INR',
-        inStock: true,
-        estimatedDeliveryMin: 10,
-        category: 'Recent',
-      };
-      addItem(dummyProduct);
+      // Trigger AI substitution
+      setLoadingSubstitution(true);
+      try {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        const res = await fetchSubstitution(product.asin);
+        setLoadingSubstitution(false);
+        navigation.navigate('SwapAI', {
+          original: product,
+          substitute: res.substitute,
+          similarityScore: res.similarityScore,
+        });
+      } catch (err) {
+        setLoadingSubstitution(false);
+        Alert.alert('Out of Stock', `This item is out of stock and no substitutes were found.`);
+      }
     }
   };
 
@@ -83,14 +123,14 @@ export default function HomeScreen(): React.JSX.Element {
       </View>
 
       {/* Scrollable Content */}
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Bento Grid Quick Actions */}
         <View style={styles.bentoGrid}>
           {/* FlashAsk (Voice) - full width row */}
-          <Pressable 
+          <Pressable
             style={styles.bentoVoiceCard}
             onPress={() => navigation.navigate('FlashAsk')}
           >
@@ -103,7 +143,7 @@ export default function HomeScreen(): React.JSX.Element {
           {/* SnapReorder & Browse side-by-side */}
           <View style={styles.bentoRow}>
             {/* SnapReorder */}
-            <Pressable 
+            <Pressable
               style={styles.bentoHalfCard}
               onPress={() => navigation.navigate('SnapReorder')}
             >
@@ -114,7 +154,7 @@ export default function HomeScreen(): React.JSX.Element {
             </Pressable>
 
             {/* Browse */}
-            <Pressable 
+            <Pressable
               style={styles.bentoHalfCard}
               onPress={goToCheckout}
             >
@@ -149,18 +189,18 @@ export default function HomeScreen(): React.JSX.Element {
           )}
 
           {state.status === 'success' && state.data && (
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false} 
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
               style={styles.productCarousel}
               contentContainerStyle={styles.productCarouselContent}
             >
               {state.data.items.map((product) => (
                 <View key={product.id} style={styles.productCard}>
                   <View style={styles.productImageWrap}>
-                    <Image 
-                      source={{ uri: product.imageUrl }} 
-                      style={styles.productImage} 
+                    <Image
+                      source={{ uri: product.imageUrl }}
+                      style={styles.productImage}
                       resizeMode="cover"
                     />
                   </View>
@@ -168,14 +208,14 @@ export default function HomeScreen(): React.JSX.Element {
                     <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
                     <Text style={styles.productBrand} numberOfLines={1}>{product.brand}</Text>
                     <Text style={styles.productPrice}>
-                      {product.currency === 'INR' ? '₹' : '$'}{product.price}
+                      {formatPrice(product.price, product.currency)}
                     </Text>
                   </View>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.addBtn}
-                    onPress={() => addItem(product)}
+                    onPress={() => handleAddToCart(product)}
                   >
-                    <MaterialIcons name="add" size={16} color="#FFFFFF" />
+                    <MaterialIcons name="add" size={16} color={Colors.textPrimary} />
                     <Text style={styles.addBtnText}>Add</Text>
                   </TouchableOpacity>
                 </View>
@@ -188,28 +228,28 @@ export default function HomeScreen(): React.JSX.Element {
         <View style={styles.recentSection}>
           <Text style={styles.recentTitle}>Reorder from recent</Text>
           <View style={styles.chipsRow}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.chip}
-              onPress={() => addRecentItem('Milk & Bread', 65, 'Mother Dairy')}
+              onPress={() => handleAddToCart(RECENT_AMAZON_PRODUCTS.juice)}
             >
               <MaterialIcons name="history" size={16} color={Colors.textMuted} />
-              <Text style={styles.chipText}>Milk & Bread</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.chip}
-              onPress={() => addRecentItem('Paracetamol', 30, 'Crocin')}
-            >
-              <MaterialIcons name="history" size={16} color={Colors.textMuted} />
-              <Text style={styles.chipText}>Paracetamol</Text>
+              <Text style={styles.chipText}>Orange Juice</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.chip}
-              onPress={() => addRecentItem('Batteries AA', 150, 'Duracell')}
+              onPress={() => handleAddToCart(RECENT_AMAZON_PRODUCTS.redbull)}
             >
               <MaterialIcons name="history" size={16} color={Colors.textMuted} />
-              <Text style={styles.chipText}>Batteries AA</Text>
+              <Text style={styles.chipText}>Red Bull</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.chip}
+              onPress={() => handleAddToCart(RECENT_AMAZON_PRODUCTS.advil)}
+            >
+              <MaterialIcons name="history" size={16} color={Colors.textMuted} />
+              <Text style={styles.chipText}>Advil Ibuprofen</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -244,6 +284,13 @@ export default function HomeScreen(): React.JSX.Element {
           <Text style={styles.tabLabel}>Profile</Text>
         </TouchableOpacity>
       </View>
+
+      {loadingSubstitution && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.accentPrimary} />
+          <Text style={styles.loadingOverlayText}>Finding AI Substitute...</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -278,13 +325,11 @@ const styles = StyleSheet.create({
   greetingText: {
     fontSize: 12,
     color: Colors.textMuted,
-    fontFamily: 'Inter',
   },
   profileName: {
     fontSize: 18,
     fontWeight: '700',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
   },
   iconBtn: {
     padding: 4,
@@ -326,7 +371,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
   },
   bentoRow: {
     flexDirection: 'row',
@@ -355,7 +399,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
   },
   predictSection: {
     marginBottom: 24,
@@ -377,14 +420,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
   },
   sectionLabel: {
     fontSize: 11,
     color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
   },
   placeholderCard: {
     height: 120,
@@ -396,7 +437,6 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: Colors.textMuted,
     fontSize: 14,
-    fontFamily: 'Inter',
   },
   errorCard: {
     backgroundColor: Colors.danger,
@@ -404,9 +444,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   errorText: {
-    color: '#FFFFFF',
+    color: Colors.textPrimary,
     fontSize: 13,
-    fontFamily: 'Inter',
   },
   productCarousel: {
     marginHorizontal: -24,
@@ -446,19 +485,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
   },
   productBrand: {
     fontSize: 11,
     color: Colors.textMuted,
-    fontFamily: 'Inter',
     marginTop: 2,
   },
   productPrice: {
     fontSize: 18,
     fontWeight: '700',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
     marginTop: 4,
   },
   addBtn: {
@@ -476,7 +512,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
     marginLeft: 4,
   },
   recentSection: {
@@ -487,7 +522,6 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    fontFamily: 'Inter',
     marginBottom: 12,
   },
   chipsRow: {
@@ -508,7 +542,6 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 14,
     color: Colors.textPrimary,
-    fontFamily: 'Inter',
     marginLeft: 6,
   },
   bottomTabBar: {
@@ -520,7 +553,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: 'rgba(19, 19, 19, 0.95)',
+    backgroundColor: Colors.tabBarBg,
     borderTopWidth: 1,
     borderColor: Colors.bgBorder,
     paddingBottom: 8,
@@ -533,7 +566,6 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 11,
     color: Colors.textMuted,
-    fontFamily: 'Inter',
     marginTop: 4,
   },
   tabLabelActive: {
@@ -555,8 +587,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: '#000000',
+    color: Colors.textInverse,
     fontSize: 10,
     fontWeight: '700',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Colors.overlayBase,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  loadingOverlayText: {
+    color: Colors.textPrimary,
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

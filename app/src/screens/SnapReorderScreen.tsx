@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   centered:    { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.bgBase },
   muted:       { color: Colors.textMuted },
   topBar:      { position: 'absolute', top: 0, left: 0, right: 0 },
-  closeBtn:    { margin: 16, width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  closeBtn:    { margin: 16, width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.scrim, alignItems: 'center', justifyContent: 'center' },
   closeTxt:    { color: Colors.textPrimary, fontSize: 16 },
   bottomSheet: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: Colors.bgSurface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, paddingBottom: 48 },
   hint:        { color: Colors.textMuted, textAlign: 'center', marginBottom: 16 },

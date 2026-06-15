@@ -1,0 +1,16 @@
+{
+    "name": "flashcart",
+    "version": "1.0.0",
+    "private": true,
+    "description": "FlashCart — AI-powered urgent shopping for Amazon Now",
+    "scripts": {
+        "app": "npm --prefix app start",
+        "app:install": "npm --prefix app install",
+        "backend": "npm --prefix backend run dev",
+        "backend:install": "npm --prefix backend install",
+        "backend:deploy": "npm --prefix backend run deploy",
+        "backend:seed": "npm --prefix backend run seed",
+        "install:all": "npm run app:install && npm run backend:install",
+        "typecheck": "npm --prefix app run typecheck && npm --prefix backend run typecheck"
+    }
+}

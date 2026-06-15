@@ -9,18 +9,18 @@ module.exports = function (api) {
           root: ['./'],
           extensions: ['.ios.js', '.android.js', '.js', '.ts', '.tsx', '.json'],
           alias: {
-            '@screens':    './src/screens',
+            '@screens': './src/screens',
             '@components': './src/components',
-            '@hooks':      './src/hooks',
-            '@store':      './src/store',
-            '@services':   './src/services',
+            '@hooks': './src/hooks',
+            '@store': './src/store',
+            '@services': './src/services',
             '@navigation': './src/navigation',
-            '@constants':  './src/constants',
-            '@app-types':  './src/types',
+            '@constants': './src/constants',
+            '@app-types': './src/types',
           },
         },
       ],
-      'react-native-reanimated/plugin', // must be last
+      'react-native-worklets/plugin', // must be last (Reanimated 4 uses the worklets plugin)
     ],
   };
 };

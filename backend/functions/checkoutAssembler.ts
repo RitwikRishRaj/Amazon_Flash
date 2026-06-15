@@ -1,5 +1,6 @@
 import type { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
 import { getItem, Tables } from '../shared/dynamo';
+import { getUserId } from '../shared/context';
 import type { ApiResponse, CartItem, User } from '../shared/types';
 
 // ─── Checkout Assembler ───────────────────────────────────────────────────────
@@ -11,11 +12,11 @@ interface CheckoutRequest {
 }
 
 interface CheckoutPayload {
-  items:               CartItem[];
-  address:             User['defaultAddress'];
-  paymentMethodLast4:  string;
-  estimatedTotal:      number;
-  currency:            string;
+  items: CartItem[];
+  address: User['defaultAddress'];
+  paymentMethodLast4: string;
+  estimatedTotal: number;
+  currency: string;
 }
 
 export const handler: APIGatewayProxyHandler = async (event): Promise<APIGatewayProxyResult> => {
@@ -27,8 +28,9 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
     const { items } = JSON.parse(event.body) as CheckoutRequest;
     if (!items?.length) return respond(400, { error: 'No items provided' });
 
-    const userId = event.requestContext.authorizer?.['sub'] as string | undefined ?? 'anonymous';
-    const user   = await getItem<User>(Tables.users, { id: userId });
+    const userId = getUserId(event);
+    if (!userId) return respond(401, { error: 'Unauthorized' });
+    const user = await getItem<User>(Tables.users, { id: userId });
 
     if (!user) return respond(404, { error: 'User not found' });
 
@@ -39,10 +41,10 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
 
     const payload: CheckoutPayload = {
       items,
-      address:            user.defaultAddress,
+      address: user.defaultAddress,
       paymentMethodLast4: user.defaultPaymentLast4,
       estimatedTotal,
-      currency:           items[0]?.product.currency ?? 'USD',
+      currency: items[0]?.product.currency ?? 'USD',
     };
 
     const response: ApiResponse<CheckoutPayload> = { data: payload, requestId };

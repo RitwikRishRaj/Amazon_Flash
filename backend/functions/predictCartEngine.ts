@@ -1,7 +1,8 @@
 import type { APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
-import { invokeClaudeJSON }     from '../shared/bedrock';
-import { Prompts }              from '../shared/prompts';
-import { getItem, scanItems, Tables } from '../shared/dynamo';
+import { invokeClaudeJSON } from '../shared/bedrock';
+import { Prompts } from '../shared/prompts';
+import { getItem, Tables } from '../shared/dynamo';
+import { getUserId } from '../shared/context';
 import type { ApiResponse, PredictCartResult, Product, User } from '../shared/types';
 
 // ─── Predict Cart Engine ──────────────────────────────────────────────────────
@@ -12,7 +13,8 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
   const requestId = event.requestContext.requestId;
 
   try {
-    const userId = event.requestContext.authorizer?.['sub'] as string | undefined ?? 'anonymous';
+    const userId = getUserId(event);
+    if (!userId) return respond(401, { error: 'Unauthorized' });
 
     // Fetch order history
     const user = await getItem<User>(Tables.users, { id: userId });
@@ -21,33 +23,26 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
     const hour = new Date().getHours();
     const timeOfDay =
       hour < 12 ? 'morning' :
-      hour < 17 ? 'afternoon' :
-      hour < 21 ? 'evening' : 'night';
+        hour < 17 ? 'afternoon' :
+          hour < 21 ? 'evening' : 'night';
 
-    // Bedrock: generate predicted product queries
-    const queries = await invokeClaudeJSON<string[]>(
+    // Bedrock: generate predicted product IDs
+    const productIds = await invokeClaudeJSON<string[]>(
       Prompts.predictCart(userId, orderHistory, timeOfDay),
     );
 
-    // Resolve queries to real products
-    const productPromises = queries.slice(0, 5).map(async (query) => {
-      const products = await scanItems<Product>({
-        TableName:        Tables.products,
-        FilterExpression: 'contains(#nm, :q) AND inStock = :true',
-        ExpressionAttributeNames:  { '#nm': 'name' },
-        ExpressionAttributeValues: { ':q': query, ':true': true },
-        Limit: 1,
-      });
-      return products[0] ?? null;
+    // Resolve IDs to real products
+    const productPromises = productIds.slice(0, 5).map(async (id) => {
+      return await getItem<Product>(Tables.products, { id });
     });
 
     const resolved = await Promise.all(productPromises);
-    const items    = resolved.filter((p): p is Product => p !== null);
+    const items = resolved.filter((p): p is Product => p !== null);
 
     const result: PredictCartResult = {
       items,
       generatedAt: new Date().toISOString(),
-      fromCache:   false,
+      fromCache: false,
     };
 
     const response: ApiResponse<PredictCartResult> = { data: result, requestId };

@@ -5,11 +5,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '@constants/colors';
 import type { RootStackParamList } from '@app-types/index';
 
+import { useSessionStore } from '@store/sessionStore';
+
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
 export default function SplashScreen(): React.JSX.Element {
   const navigation = useNavigation<Nav>();
-  
+  const { token, hydrated, hydrate } = useSessionStore();
+
   // Animation values
   const scale = useRef(new Animated.Value(0.85)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -79,13 +82,22 @@ export default function SplashScreen(): React.JSX.Element {
       ])
     ).start();
 
-    // 4. Timer to navigate to Home
-    const timer = setTimeout(() => {
-      navigation.replace('Home');
-    }, 3000);
+    // 4. Hydrate persisted session, then navigate once it resolves (min 2s splash)
+    void hydrate();
 
+    return () => {
+      // animations are cleaned up by unmount
+    };
+  }, [scale, opacity, pulseScaleX, pulseOpacity, statusOpacity, hydrate]);
+
+  // Navigate after session hydration resolves, holding the splash for at least 2s.
+  useEffect(() => {
+    if (!hydrated) return;
+    const timer = setTimeout(() => {
+      navigation.replace(token ? 'Home' : 'Onboarding');
+    }, 2000);
     return () => clearTimeout(timer);
-  }, [navigation, scale, opacity, pulseScaleX, pulseOpacity, statusOpacity]);
+  }, [hydrated, token, navigation]);
 
   return (
     <View style={styles.container}>
@@ -98,16 +110,16 @@ export default function SplashScreen(): React.JSX.Element {
           <Text style={styles.brandTitle}>FlashCart</Text>
           <Text style={styles.brandSubtitle}>by Amazon Now</Text>
         </View>
-        
+
         {/* Pulsing Indicator */}
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.pulseLine, 
-            { 
+            styles.pulseLine,
+            {
               opacity: pulseOpacity,
-              transform: [{ scaleX: pulseScaleX }] 
+              transform: [{ scaleX: pulseScaleX }]
             }
-          ]} 
+          ]}
         />
       </Animated.View>
 
@@ -152,7 +164,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 38,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: Colors.textPrimary,
     textAlign: 'center',
     lineHeight: 44,
   },
