@@ -15,6 +15,7 @@ import type { RootStackParamList, Product } from '@app-types/index';
 import { useContextMode } from '@hooks/useContextMode';
 import { usePredictCart } from '@hooks/usePredictCart';
 import { useCartStore } from '@store/cartStore';
+import { useCompareStore } from '@store/compareStore';
 import { useSessionStore } from '@store/sessionStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -23,7 +24,7 @@ const RECENT_AMAZON_PRODUCTS: Record<string, Product> = {
   juice: {
     id: "prod-001",
     asin: "B0014D8D5A",
-    name: "Tropicana Orange Juice, 52 fl oz",
+    name: "Tropicana Orange Juice, 1 L",
     brand: "Tropicana",
     imageUrl: "https://images-na.ssl-images-amazon.com/images/I/71uF6b+KqyL._SL1500_.jpg",
     price: 199,
@@ -35,10 +36,10 @@ const RECENT_AMAZON_PRODUCTS: Record<string, Product> = {
   redbull: {
     id: "prod-006",
     asin: "B004F34EY6",
-    name: "Red Bull Energy Drink, 12-pack (8.4 fl oz)",
+    name: "Red Bull Energy Drink, 4 x 250 ml",
     brand: "Red Bull",
     imageUrl: "https://images-na.ssl-images-amazon.com/images/I/81e592hR2qL._SL1500_.jpg",
-    price: 1499,
+    price: 500,
     currency: "INR",
     inStock: true,
     estimatedDeliveryMin: 10,
@@ -63,6 +64,7 @@ export default function HomeScreen(): React.JSX.Element {
   const { mode } = useContextMode();
   const { state } = usePredictCart();
   const { items, addItem } = useCartStore();
+  const { items: compareItems, toggle: toggleCompare, has: inCompare } = useCompareStore();
   const { user } = useSessionStore();
 
   const [loadingSubstitution, setLoadingSubstitution] = useState(false);
@@ -203,6 +205,17 @@ export default function HomeScreen(): React.JSX.Element {
                       style={styles.productImage}
                       resizeMode="cover"
                     />
+                    <TouchableOpacity
+                      style={[styles.compareToggle, inCompare(product.id) && styles.compareToggleActive]}
+                      onPress={() => { void Haptics.selectionAsync(); toggleCompare(product); }}
+                      hitSlop={8}
+                    >
+                      <MaterialIcons
+                        name={inCompare(product.id) ? 'check' : 'compare-arrows'}
+                        size={14}
+                        color={inCompare(product.id) ? Colors.bgBase : Colors.accentPrimary}
+                      />
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.productInfo}>
                     <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
@@ -254,6 +267,18 @@ export default function HomeScreen(): React.JSX.Element {
           </View>
         </View>
       </ScrollView>
+
+      {/* Floating Compare CTA */}
+      {compareItems.length >= 2 && (
+        <TouchableOpacity
+          style={styles.compareBar}
+          onPress={() => navigation.navigate('Compare')}
+          activeOpacity={0.9}
+        >
+          <MaterialIcons name="compare-arrows" size={20} color={Colors.bgBase} />
+          <Text style={styles.compareBarText}>Compare {compareItems.length} items</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Bottom Navigation Bar */}
       <View style={styles.bottomTabBar}>
@@ -603,5 +628,43 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     fontWeight: '600',
+  },
+  compareToggle: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.bgBase,
+    borderWidth: 1,
+    borderColor: Colors.accentPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compareToggleActive: {
+    backgroundColor: Colors.accentPrimary,
+  },
+  compareBar: {
+    position: 'absolute',
+    bottom: 84,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.accentPrimary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  compareBarText: {
+    color: Colors.bgBase,
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

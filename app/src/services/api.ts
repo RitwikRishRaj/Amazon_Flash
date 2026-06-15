@@ -46,9 +46,9 @@ http.interceptors.response.use(
 
 // ─── API Methods ──────────────────────────────────────────────────────────────
 
-export async function processVoice(audioBase64: string): Promise<VoiceResult> {
+export async function processVoice(transcript: string): Promise<VoiceResult> {
   const res = await http.post<ApiResponse<VoiceResult>>('/voice/process', {
-    audio: audioBase64,
+    transcript,
   });
   return res.data.data;
 }

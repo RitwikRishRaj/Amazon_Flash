@@ -10,7 +10,12 @@ const CATALOG = `
 - ID: "prod-005" | Name: "Crocin Advance 500mg, 20 Tablets" (brand: "Crocin", category: "health")
 - ID: "prod-006" | Name: "Red Bull Energy Drink, 4 x 250 ml" (brand: "Red Bull", category: "beverages")
 - ID: "prod-007" | Name: "Dove Deeply Nourishing Body Wash, 800 ml" (brand: "Dove", category: "personal-care")
-- ID: "prod-008" | Name: "Yoga Bar Chocolate Protein Bars, 12-pack" (brand: "Yoga Bar", category: "snacks")`.trim();
+- ID: "prod-008" | Name: "Yoga Bar Chocolate Protein Bars, 12-pack" (brand: "Yoga Bar", category: "snacks")
+- ID: "prod-009" | Name: "Dettol Original Liquid Handwash, 900 ml Refill" (brand: "Dettol", category: "personal-care")
+- ID: "prod-010" | Name: "Monster Energy Drink, 350 ml" (brand: "Monster", category: "beverages")
+- ID: "prod-011" | Name: "Sting Energy Drink, 250 ml" (brand: "Sting", category: "beverages")
+- ID: "prod-012" | Name: "Real Fruit Power Orange Juice, 1 L" (brand: "Real", category: "beverages")
+- ID: "prod-013" | Name: "Lifebuoy Total 10 Germ Protection Handwash Refill, 750 ml" (brand: "Lifebuoy", category: "personal-care")`.trim();
 
 export const Prompts = {
   /**

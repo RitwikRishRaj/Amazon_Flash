@@ -66,7 +66,7 @@ export interface ApiResponse<T> {
   requestId: string;
 }
 
-export interface VoiceRequest { audio: string }  // base64 wav/m4a
+export interface VoiceRequest { audio?: string; transcript?: string }  // base64 audio OR on-device transcript
 export interface SnapRequest { image: string }  // base64 jpeg
 
 export interface VoiceResult {

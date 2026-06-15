@@ -40,7 +40,17 @@
       "expo-camera",
       "expo-notifications",
       "expo-splash-screen",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "FlashCart uses your microphone so you can speak your order with FlashAsk.",
+          "speechRecognitionPermission": "FlashCart uses speech recognition to understand the product you ask for.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ]
     ],
     "extra": {
       "eas": {

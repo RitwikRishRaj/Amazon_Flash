@@ -111,6 +111,7 @@ export type RootStackParamList = {
   Checkout: { items: CartItem[] };
   Confirmed: { order: Order };
   SwapAI: { original: Product; substitute: Product; similarityScore: number };
+  Compare: undefined;
 };
 
 // ─── UI State Types ───────────────────────────────────────────────────────────

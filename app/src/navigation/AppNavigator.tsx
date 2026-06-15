@@ -16,6 +16,7 @@ import SnapReorderScreen from '@screens/SnapReorderScreen';
 import CheckoutScreen from '@screens/CheckoutScreen';
 import ConfirmedScreen from '@screens/ConfirmedScreen';
 import SwapAIScreen from '@screens/SwapAIScreen';
+import CompareScreen from '@screens/CompareScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -57,6 +58,11 @@ export default function AppNavigator(): React.JSX.Element {
           <Stack.Screen
             name="SwapAI"
             component={SwapAIScreen}
+            options={{ animation: 'slide_from_bottom', gestureEnabled: true }}
+          />
+          <Stack.Screen
+            name="Compare"
+            component={CompareScreen}
             options={{ animation: 'slide_from_bottom', gestureEnabled: true }}
           />
         </Stack.Navigator>

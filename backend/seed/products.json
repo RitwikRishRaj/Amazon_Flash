@@ -102,5 +102,70 @@
     "estimatedDeliveryMin": 11,
     "category": "snacks",
     "confidence": 0.87
+  },
+  {
+    "id": "prod-009",
+    "asin": "B003F8FN8M",
+    "name": "Dettol Original Liquid Handwash, 900 ml Refill",
+    "brand": "Dettol",
+    "imageUrl": "https://m.media-amazon.com/images/I/61iX0lOcQ9L._SL1500_.jpg",
+    "price": 199,
+    "currency": "INR",
+    "inStock": true,
+    "estimatedDeliveryMin": 9,
+    "category": "personal-care",
+    "confidence": 0.9
+  },
+  {
+    "id": "prod-010",
+    "asin": "B09KMVZ7QK",
+    "name": "Monster Energy Drink, 350 ml",
+    "brand": "Monster",
+    "imageUrl": "https://m.media-amazon.com/images/I/51-EaELq4ML._SL1080_.jpg",
+    "price": 125,
+    "currency": "INR",
+    "inStock": true,
+    "estimatedDeliveryMin": 10,
+    "category": "beverages",
+    "confidence": 0.9
+  },
+  {
+    "id": "prod-011",
+    "asin": "B09Q5XQ7VJ",
+    "name": "Sting Energy Drink, 250 ml",
+    "brand": "Sting",
+    "imageUrl": "https://m.media-amazon.com/images/I/41kZ0Sa6r8L._SL1000_.jpg",
+    "price": 20,
+    "currency": "INR",
+    "inStock": true,
+    "estimatedDeliveryMin": 8,
+    "category": "beverages",
+    "confidence": 0.86
+  },
+  {
+    "id": "prod-012",
+    "asin": "B0140TF93E",
+    "name": "Real Fruit Power Orange Juice, 1 L",
+    "brand": "Real",
+    "imageUrl": "https://m.media-amazon.com/images/I/61bQ3ywFv8L._SL1500_.jpg",
+    "price": 120,
+    "currency": "INR",
+    "inStock": true,
+    "estimatedDeliveryMin": 11,
+    "category": "beverages",
+    "confidence": 0.88
+  },
+  {
+    "id": "prod-013",
+    "asin": "B00J040BCE",
+    "name": "Lifebuoy Total 10 Germ Protection Handwash Refill, 750 ml",
+    "brand": "Lifebuoy",
+    "imageUrl": "https://m.media-amazon.com/images/I/51tnf2vqGgL._SL1500_.jpg",
+    "price": 110,
+    "currency": "INR",
+    "inStock": true,
+    "estimatedDeliveryMin": 9,
+    "category": "personal-care",
+    "confidence": 0.87
   }
 ]

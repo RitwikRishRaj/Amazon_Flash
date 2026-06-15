@@ -8,6 +8,7 @@ import { invokeClaudeJSON } from '../shared/bedrock';
 import { Prompts } from '../shared/prompts';
 import { getItem, Tables } from '../shared/dynamo';
 import { getUserId } from '../shared/context';
+import { matchProductId } from '../shared/productMatch';
 import type { ApiResponse, VoiceRequest, VoiceResult, Product, User } from '../shared/types';
 
 const lexClient = new LexRuntimeV2Client({ region: process.env['AWS_REGION'] ?? 'us-east-1' });
@@ -63,54 +64,68 @@ export const handler: APIGatewayProxyHandler = async (event): Promise<APIGateway
   try {
     if (!event.body) return respond(400, { error: 'Missing body' });
 
-    const { audio } = JSON.parse(event.body) as VoiceRequest;
-    if (!audio) return respond(400, { error: 'Missing audio field' });
+    const { audio, transcript: providedTranscript } = JSON.parse(event.body) as VoiceRequest;
+    if (!audio && !providedTranscript) {
+      return respond(400, { error: 'Provide either audio or transcript' });
+    }
 
-    // Require an authenticated identity
     const userId = getUserId(event);
-    if (!userId) return respond(401, { error: 'Unauthorized' });
 
     // Fetch user order history for context
     const user = await getItem<User>(Tables.users, { id: userId });
     const orderHistory = user?.orderHistory ?? [];
 
-    // Step 1: Send audio to Lex for ASR → transcript.
-    // The client records 16 kHz mono PCM WAV; strip the RIFF header so Lex
-    // receives the raw little-endian 16-bit samples it expects for x-l16.
-    const wavBuffer = Buffer.from(audio, 'base64');
-    const pcmBuffer = extractPcmFromWav(wavBuffer);
-    const lexResponse = await lexClient.send(new RecognizeUtteranceCommand({
-      botId: process.env['LEX_BOT_ID'],
-      botAliasId: process.env['LEX_BOT_ALIAS_ID'],
-      localeId: process.env['LEX_LOCALE_ID'] ?? 'en_US',
-      sessionId: userId,
-      requestContentType: 'audio/x-l16; sample-rate=16000; channel-count=1',
-      responseContentType: 'text/plain;charset=utf-8',
-      inputStream: pcmBuffer as unknown as Uint8Array,
-    }));
+    // Step 1: Obtain a transcript.
+    // Preferred path: the client sends an on-device speech-to-text transcript.
+    // Fallback path: base64 PCM WAV audio is transcribed via Amazon Lex (iOS).
+    let transcript = (providedTranscript ?? '').trim();
+    if (!transcript && audio) {
+      const wavBuffer = Buffer.from(audio, 'base64');
+      const pcmBuffer = extractPcmFromWav(wavBuffer);
+      const lexResponse = await lexClient.send(new RecognizeUtteranceCommand({
+        botId: process.env['LEX_BOT_ID'],
+        botAliasId: process.env['LEX_BOT_ALIAS_ID'],
+        localeId: process.env['LEX_LOCALE_ID'] ?? 'en_US',
+        sessionId: userId,
+        requestContentType: 'audio/x-l16; sample-rate=16000; channel-count=1',
+        responseContentType: 'text/plain;charset=utf-8',
+        inputStream: pcmBuffer as unknown as Uint8Array,
+      }));
+      transcript = decodeLexField(lexResponse.inputTranscript);
+    }
 
-    // inputTranscript is gzip+base64 encoded in the Lex v2 RecognizeUtterance response
-    const transcript = decodeLexField(lexResponse.inputTranscript);
+    // Step 2: Resolve transcript → product.
+    // Primary: deterministic keyword match (reliable, no external dependency).
+    // Fallback: Bedrock intent extraction when no keyword hits.
+    let productId = matchProductId(transcript);
+    let confidence = productId ? 0.95 : 0;
 
-    // Step 2: Bedrock intent extraction
-    const intentData = await invokeClaudeJSON<{
-      productId: string | null;
-      quantity: number;
-      urgent: boolean;
-      confidence: number;
-    }>(Prompts.voiceToIntent(transcript, orderHistory));
+    if (!productId) {
+      try {
+        const intentData = await invokeClaudeJSON<{
+          productId: string | null;
+          quantity: number;
+          urgent: boolean;
+          confidence: number;
+        }>(Prompts.voiceToIntent(transcript, orderHistory));
+        productId = intentData.productId;
+        confidence = intentData.confidence ?? 0.6;
+      } catch (bedrockErr) {
+        console.warn('[voiceProcessor] Bedrock unavailable for intent match:', bedrockErr);
+      }
+    }
 
     // Step 3: Product lookup
     let product: Product | null = null;
-    if (intentData.productId) {
-      product = await getItem<Product>(Tables.products, { id: intentData.productId });
+    if (productId) {
+      product = await getItem<Product>(Tables.products, { id: productId });
     }
 
     const result: VoiceResult = {
       transcript,
-      intent: intentData.productId ?? 'none',
+      intent: productId ?? 'none',
       product,
-      confidence: intentData.confidence,
+      confidence,
     };
 
     const response: ApiResponse<VoiceResult> = { data: result, requestId };

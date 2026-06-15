@@ -36,7 +36,7 @@ const CROCIN_PRODUCT: Product = {
 export default function FlashAskScreen(): React.JSX.Element {
   const navigation = useNavigation<Nav>();
   const { user } = useSessionStore();
-  const { state, isRecording, startRecording, stopRecording, reset } = useVoice();
+  const { state, isRecording, transcript, startRecording, stopRecording, reset } = useVoice();
 
   // Animation values for pulsing rings
   const ring1Scale = useRef(new Animated.Value(0.8)).current;
@@ -342,6 +342,11 @@ export default function FlashAskScreen(): React.JSX.Element {
                 : 'Tap mic & speak'}
         </Text>
 
+        {/* Live transcript */}
+        {!!transcript && (
+          <Text style={styles.transcriptText} numberOfLines={2}>“{transcript}”</Text>
+        )}
+
         {/* Dynamic Sound Wave */}
         <View style={styles.soundWave}>
           <Animated.View style={[styles.soundWaveBar, { transform: [{ scaleY: bar1ScaleY }] }]} />
@@ -499,6 +504,15 @@ const styles = StyleSheet.create({
     textShadowColor: Colors.accentAlpha50,
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
+  },
+  transcriptText: {
+    fontSize: 15,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: -16,
+    marginBottom: 24,
+    paddingHorizontal: 32,
   },
   soundWave: {
     flexDirection: 'row',
