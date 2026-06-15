@@ -65,7 +65,7 @@ export default function HomeScreen(): React.JSX.Element {
   const { state } = usePredictCart();
   const { items, addItem } = useCartStore();
   const { items: compareItems, toggle: toggleCompare, has: inCompare } = useCompareStore();
-  const { user } = useSessionStore();
+  const { user, clearSession } = useSessionStore();
 
   const [loadingSubstitution, setLoadingSubstitution] = useState(false);
 
@@ -78,6 +78,12 @@ export default function HomeScreen(): React.JSX.Element {
 
   const goToCheckout = () => {
     navigation.navigate('Checkout', { items });
+  };
+
+  const handleSignOut = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    clearSession();
+    navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
   };
 
   const handleAddToCart = async (product: Product) => {
@@ -119,8 +125,8 @@ export default function HomeScreen(): React.JSX.Element {
             <Text style={styles.profileName}>{user?.name ?? 'Rishu'}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.iconBtn}>
-          <MaterialIcons name="settings" size={24} color={Colors.textMuted} />
+        <TouchableOpacity style={styles.iconBtn} onPress={handleSignOut}>
+          <MaterialIcons name="logout" size={24} color={Colors.textMuted} />
         </TouchableOpacity>
       </View>
 
